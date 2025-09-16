@@ -13,11 +13,50 @@ interface QuietBlockFormProps {
 }
 
 export function QuietBlockForm({ block, onSubmit, onCancel, loading }: QuietBlockFormProps) {
+  // Convert stored time string back to datetime-local format
+  const convertTimeStringToDateTimeLocal = (timeString: string) => {
+    try {
+      if (typeof timeString === 'string' && timeString.includes(':')) {
+        // Parse time string like "2:51 PM" or "12:30 AM"
+        const [time, period] = timeString.split(' ')
+        const [hours, minutes] = time.split(':').map(Number)
+        
+        let hour24 = hours
+        if (period === 'AM' && hours === 12) {
+          hour24 = 0
+        } else if (period === 'PM' && hours !== 12) {
+          hour24 = hours + 12
+        }
+        
+        // Use today's date for editing
+        const today = new Date()
+        const year = today.getFullYear()
+        const month = String(today.getMonth() + 1).padStart(2, '0')
+        const day = String(today.getDate()).padStart(2, '0')
+        
+        return `${year}-${month}-${day}T${String(hour24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+      }
+    } catch (error) {
+      console.error('Error converting time string:', error)
+    }
+    
+    // Fallback to current time if parsing fails
+    return format(addMinutes(new Date(), 5), "yyyy-MM-dd'T'HH:mm")
+  }
+
   const { register, handleSubmit, formState: { errors }, watch } = useForm<QuietBlockFormType>({
     defaultValues: block ? {
-      // Convert UTC dates from database to local timezone for editing
-      startDateTime: format(new Date(block.startDateTime), "yyyy-MM-dd'T'HH:mm"),
-      endDateTime: format(new Date(block.endDateTime), "yyyy-MM-dd'T'HH:mm"),
+      // Convert stored time strings back to datetime-local format
+      startDateTime: (() => {
+        const converted = convertTimeStringToDateTimeLocal(block.startDateTime as string)
+        console.log('🔄 Converting start time:', { original: block.startDateTime, converted })
+        return converted
+      })(),
+      endDateTime: (() => {
+        const converted = convertTimeStringToDateTimeLocal(block.endDateTime as string)
+        console.log('🔄 Converting end time:', { original: block.endDateTime, converted })
+        return converted
+      })(),
       description: block.description,
     } : {
       // Set default to current time + 5 minutes to avoid "past time" issues
