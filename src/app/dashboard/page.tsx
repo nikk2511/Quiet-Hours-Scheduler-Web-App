@@ -131,6 +131,25 @@ export default function DashboardPage() {
     }
   }
 
+  const handleTestEmailNotifications = async () => {
+    try {
+      const response = await fetch('/api/test-email', {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('📧 Email test results:', data)
+        toast.success(`Found ${data.blocksNeedingNotification} blocks needing notifications`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to test email notifications')
+      }
+    } catch (error) {
+      toast.error('Error testing email notifications')
+    }
+  }
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -204,13 +223,21 @@ export default function DashboardPage() {
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600 mt-1">Manage your quiet study time blocks</p>
             </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="btn btn-primary"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Quiet Block
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setShowForm(true)}
+                className="btn btn-primary"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Quiet Block
+              </button>
+              <button
+                onClick={handleTestEmailNotifications}
+                className="btn bg-yellow-600 text-white hover:bg-yellow-700"
+              >
+                📧 Test Email
+              </button>
+            </div>
           </div>
         </div>
 

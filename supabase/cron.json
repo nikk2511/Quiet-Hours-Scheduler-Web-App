@@ -1,0 +1,9 @@
+{
+  "cron": [
+    {
+      "name": "email-notifications",
+      "schedule": "*/1 * * * *",
+      "function": "email-notifications"
+    }
+  ]
+}

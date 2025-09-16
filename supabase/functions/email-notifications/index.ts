@@ -10,8 +10,8 @@ const corsHeaders = {
 interface QuietBlock {
   _id: string
   userId: string
-  startDateTime: Date
-  endDateTime: Date
+  startDateTime: string | Date  // Can be string or Date
+  endDateTime: string | Date
   description: string
   notificationSent: boolean
   createdAt: Date
@@ -47,16 +47,53 @@ serve(async (req) => {
 
     console.log(`Checking for blocks starting between ${now.toISOString()} and ${tenMinutesFromNow.toISOString()}`)
 
-    // Find blocks that need notifications (starting in 10 minutes and notification not sent)
-    const blocksNeedingNotification = await quietBlocksCollection
+    // Get all blocks that haven't had notifications sent
+    const allBlocks = await quietBlocksCollection
       .find({
-        startDateTime: {
-          $gte: now,
-          $lte: tenMinutesFromNow
-        },
         notificationSent: false
       })
       .toArray()
+
+    // Parse time strings and filter blocks that start in the next 10 minutes
+    const parseTimeString = (timeString: string) => {
+      try {
+        if (typeof timeString === 'string' && timeString.includes(':')) {
+          const [time, period] = timeString.split(' ')
+          const [hours, minutes] = time.split(':').map(Number)
+          
+          let hour24 = hours
+          if (period === 'AM' && hours === 12) {
+            hour24 = 0
+          } else if (period === 'PM' && hours !== 12) {
+            hour24 = hours + 12
+          }
+          
+          return { hours: hour24, minutes }
+        }
+      } catch (error) {
+        console.error('Error parsing time string:', error)
+      }
+      return { hours: 0, minutes: 0 }
+    }
+
+    // Get current time in minutes for comparison
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+    const currentTimeInMinutes = currentHour * 60 + currentMinute
+    const tenMinutesFromNowInMinutes = currentTimeInMinutes + 10
+
+    // Filter blocks that start in the next 10 minutes
+    const blocksNeedingNotification = allBlocks.filter(block => {
+      if (typeof block.startDateTime === 'string') {
+        const startTime = parseTimeString(block.startDateTime)
+        const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
+        return startTimeInMinutes >= currentTimeInMinutes && startTimeInMinutes <= tenMinutesFromNowInMinutes
+      } else {
+        // Handle Date objects (legacy)
+        const startTime = new Date(block.startDateTime)
+        return startTime >= now && startTime <= tenMinutesFromNow
+      }
+    })
 
     console.log(`Found ${blocksNeedingNotification.length} blocks needing notifications`)
 
@@ -74,12 +111,32 @@ serve(async (req) => {
           continue
         }
 
+        // Convert string times to Date objects for email
+        let startDateTime: Date
+        let endDateTime: Date
+        
+        if (typeof block.startDateTime === 'string') {
+          const startTime = parseTimeString(block.startDateTime)
+          const today = new Date()
+          startDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), startTime.hours, startTime.minutes)
+        } else {
+          startDateTime = new Date(block.startDateTime)
+        }
+        
+        if (typeof block.endDateTime === 'string') {
+          const endTime = parseTimeString(block.endDateTime)
+          const today = new Date()
+          endDateTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), endTime.hours, endTime.minutes)
+        } else {
+          endDateTime = new Date(block.endDateTime)
+        }
+
         // Send email notification
         const emailSent = await sendEmailNotification({
           email: user.user.email,
           description: block.description,
-          startDateTime: block.startDateTime,
-          endDateTime: block.endDateTime
+          startDateTime: startDateTime,
+          endDateTime: endDateTime
         })
 
         if (emailSent) {
