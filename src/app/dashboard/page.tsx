@@ -144,11 +144,54 @@ export default function DashboardPage() {
 
   if (!user) return null
 
-  // Since we store times as strings now, show all blocks as upcoming for now
-  // TODO: Implement proper time comparison with string times
-  const upcomingBlocks = blocks
-  const pastBlocks: QuietBlock[] = []
-  const activeBlocks: QuietBlock[] = []
+  // Parse time string to get hour and minute for comparison
+  const parseTimeString = (timeString: string) => {
+    try {
+      if (typeof timeString === 'string' && timeString.includes(':')) {
+        const [time, period] = timeString.split(' ')
+        const [hours, minutes] = time.split(':').map(Number)
+        
+        let hour24 = hours
+        if (period === 'AM' && hours === 12) {
+          hour24 = 0
+        } else if (period === 'PM' && hours !== 12) {
+          hour24 = hours + 12
+        }
+        
+        return { hours: hour24, minutes }
+      }
+    } catch (error) {
+      console.error('Error parsing time string:', error)
+    }
+    return { hours: 0, minutes: 0 }
+  }
+
+  // Get current time for comparison
+  const now = new Date()
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  const currentTimeInMinutes = currentHour * 60 + currentMinute
+
+  // Filter blocks based on time comparison
+  const upcomingBlocks = blocks.filter(block => {
+    const startTime = parseTimeString(block.startDateTime as string)
+    const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
+    return startTimeInMinutes > currentTimeInMinutes
+  })
+
+  const activeBlocks = blocks.filter(block => {
+    const startTime = parseTimeString(block.startDateTime as string)
+    const endTime = parseTimeString(block.endDateTime as string)
+    const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
+    const endTimeInMinutes = endTime.hours * 60 + endTime.minutes
+    return startTimeInMinutes <= currentTimeInMinutes && endTimeInMinutes > currentTimeInMinutes
+  })
+
+  const pastBlocks = blocks.filter(block => {
+    const endTime = parseTimeString(block.endDateTime as string)
+    const endTimeInMinutes = endTime.hours * 60 + endTime.minutes
+    return endTimeInMinutes <= currentTimeInMinutes
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -224,6 +267,7 @@ export default function DashboardPage() {
         {/* Debug Info */}
         <div className="mb-4 p-4 bg-yellow-100 rounded-lg">
           <h3 className="font-semibold text-yellow-800">Debug Info:</h3>
+          <p className="text-sm text-yellow-700">Current time: {now.toLocaleTimeString()}</p>
           <p className="text-sm text-yellow-700">Total blocks: {blocks.length}</p>
           <p className="text-sm text-yellow-700">Upcoming: {upcomingBlocks.length}</p>
           <p className="text-sm text-yellow-700">Active: {activeBlocks.length}</p>
@@ -271,7 +315,6 @@ export default function DashboardPage() {
             </h2>
             <div className="grid gap-4">
               {pastBlocks
-                .sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime())
                 .slice(0, 10) // Show only last 10 completed blocks
                 .map((block) => (
                   <QuietBlockCard
