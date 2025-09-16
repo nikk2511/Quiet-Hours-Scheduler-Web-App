@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceSupabase } from '@/lib/supabase-server'
+import { createServerSupabase } from '@/lib/supabase-server'
 import { connectToDatabase } from '@/lib/mongodb'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServiceSupabase()
+    console.log('🔍 Testing email notifications...')
+    const supabase = createServerSupabase()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+    console.log('👤 User auth result:', { user: user?.id, error: authError?.message })
+
     if (authError || !user) {
+      console.log('❌ Authentication failed:', authError?.message)
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
 
