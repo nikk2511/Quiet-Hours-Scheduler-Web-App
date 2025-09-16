@@ -150,6 +150,25 @@ export default function DashboardPage() {
     }
   }
 
+  const handleSendEmailsNow = async () => {
+    try {
+      const response = await fetch('/api/send-emails', {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('📧 Email sending results:', data)
+        toast.success(`Sent ${data.emailsSent} email notifications!`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to send emails')
+      }
+    } catch (error) {
+      toast.error('Error sending emails')
+    }
+  }
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -236,6 +255,12 @@ export default function DashboardPage() {
                 className="btn bg-yellow-600 text-white hover:bg-yellow-700"
               >
                 📧 Test Email
+              </button>
+              <button
+                onClick={handleSendEmailsNow}
+                className="btn bg-green-600 text-white hover:bg-green-700"
+              >
+                📨 Send Emails Now
               </button>
             </div>
           </div>
