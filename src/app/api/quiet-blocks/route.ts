@@ -58,10 +58,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse datetime-local strings properly (they come without timezone info)
-    const start = new Date(startDateTime)
-    const end = new Date(endDateTime)
+    // Parse datetime-local strings correctly
+    // datetime-local gives us "2024-01-16T14:40" which should be treated as LOCAL time
+    // But new Date() can interpret this as UTC in Node.js environment
+    
+    const parseLocalDateTime = (dateTimeStr: string) => {
+      // dateTimeStr is like "2024-01-16T14:40"
+      const [date, time] = dateTimeStr.split('T')
+      const [year, month, day] = date.split('-').map(Number)
+      const [hour, minute] = time.split(':').map(Number)
+      
+      // Create Date object in LOCAL timezone
+      return new Date(year, month - 1, day, hour, minute)
+    }
+    
+    const start = parseLocalDateTime(startDateTime)
+    const end = parseLocalDateTime(endDateTime)
     const now = new Date()
+    
+    console.log('🕐 CREATE Timezone Debug:')
+    console.log('Input strings:', { startDateTime, endDateTime })
+    console.log('Parsed LOCAL dates:', { 
+      start: start.toString(), 
+      end: end.toString() 
+    })
     
     // Add 30 seconds buffer to account for processing time
     const minStartTime = new Date(now.getTime() + 30 * 1000)
@@ -144,10 +164,24 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Parse datetime-local strings properly (they come without timezone info)
-    const start = new Date(startDateTime)
-    const end = new Date(endDateTime)
+    // Parse datetime-local strings correctly (same as CREATE method)
+    const parseLocalDateTime = (dateTimeStr: string) => {
+      const [date, time] = dateTimeStr.split('T')
+      const [year, month, day] = date.split('-').map(Number)
+      const [hour, minute] = time.split(':').map(Number)
+      return new Date(year, month - 1, day, hour, minute)
+    }
+    
+    const start = parseLocalDateTime(startDateTime)
+    const end = parseLocalDateTime(endDateTime)
     const now = new Date()
+    
+    console.log('🕐 UPDATE Timezone Debug:')
+    console.log('Input strings:', { startDateTime, endDateTime })
+    console.log('Parsed LOCAL dates:', { 
+      start: start.toString(), 
+      end: end.toString() 
+    })
     
     // Add 30 seconds buffer to account for processing time
     const minStartTime = new Date(now.getTime() + 30 * 1000)
