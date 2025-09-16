@@ -15,12 +15,14 @@ interface QuietBlockFormProps {
 export function QuietBlockForm({ block, onSubmit, onCancel, loading }: QuietBlockFormProps) {
   const { register, handleSubmit, formState: { errors }, watch } = useForm<QuietBlockFormType>({
     defaultValues: block ? {
+      // Convert UTC dates from database to local timezone for editing
       startDateTime: format(new Date(block.startDateTime), "yyyy-MM-dd'T'HH:mm"),
       endDateTime: format(new Date(block.endDateTime), "yyyy-MM-dd'T'HH:mm"),
       description: block.description,
     } : {
-      startDateTime: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-      endDateTime: format(addMinutes(new Date(), 60), "yyyy-MM-dd'T'HH:mm"),
+      // Set default to current time + 5 minutes to avoid "past time" issues
+      startDateTime: format(addMinutes(new Date(), 5), "yyyy-MM-dd'T'HH:mm"),
+      endDateTime: format(addMinutes(new Date(), 65), "yyyy-MM-dd'T'HH:mm"),
       description: '',
     }
   })
@@ -36,8 +38,10 @@ export function QuietBlockForm({ block, onSubmit, onCancel, loading }: QuietBloc
 
   const validateStartTime = (startTime: string) => {
     const now = new Date()
+    // Add 1 minute buffer to avoid immediate "past time" issues
+    const minTime = addMinutes(now, 1)
     const start = new Date(startTime)
-    return start > now || 'Start time must be in the future'
+    return start >= minTime || 'Start time must be at least 1 minute in the future'
   }
 
   return (

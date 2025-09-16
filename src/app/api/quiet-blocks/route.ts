@@ -58,11 +58,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Parse datetime-local strings properly (they come without timezone info)
     const start = new Date(startDateTime)
     const end = new Date(endDateTime)
     const now = new Date()
+    
+    // Add 30 seconds buffer to account for processing time
+    const minStartTime = new Date(now.getTime() + 30 * 1000)
 
-    if (start <= now) {
+    if (start <= minStartTime) {
       return NextResponse.json(
         { message: 'Start time must be in the future' },
         { status: 400 }
@@ -140,8 +144,13 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // Parse datetime-local strings properly (they come without timezone info)
     const start = new Date(startDateTime)
     const end = new Date(endDateTime)
+    const now = new Date()
+    
+    // Add 30 seconds buffer to account for processing time
+    const minStartTime = new Date(now.getTime() + 30 * 1000)
 
     if (end <= start) {
       return NextResponse.json(
@@ -163,6 +172,15 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { message: 'Quiet block not found' },
         { status: 404 }
+      )
+    }
+    
+    // Only enforce future time if the start time is being changed to a new future time
+    const currentStart = new Date(existingBlock.startDateTime)
+    if (start.getTime() !== currentStart.getTime() && start <= minStartTime) {
+      return NextResponse.json(
+        { message: 'Start time must be in the future when changing to a new time' },
+        { status: 400 }
       )
     }
 
