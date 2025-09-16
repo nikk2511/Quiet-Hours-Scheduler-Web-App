@@ -117,7 +117,9 @@ export async function POST(request: NextRequest) {
       return {
         original: dateTimeStr,
         display: displayTime,
-        dateObj: indianDate
+        dateObj: indianDate,
+        hours: hour,
+        minutes: minute
       }
     }
     
@@ -280,7 +282,9 @@ export async function PUT(request: NextRequest) {
       return {
         original: dateTimeStr,
         display: displayTime,
-        dateObj: indianDate
+        dateObj: indianDate,
+        hours: hour,
+        minutes: minute
       }
     }
     
