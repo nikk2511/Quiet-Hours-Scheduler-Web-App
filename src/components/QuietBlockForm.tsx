@@ -45,13 +45,8 @@ export function QuietBlockForm({ block, onSubmit, onCancel, loading }: QuietBloc
   }
 
   const handleFormSubmit = (data: QuietBlockFormType) => {
-    // Add timezone offset to help server parse times correctly
-    const timezoneOffset = new Date().getTimezoneOffset() // minutes difference from UTC
-    const dataWithTimezone = {
-      ...data,
-      timezoneOffset // Send user's timezone offset to server
-    }
-    onSubmit(dataWithTimezone)
+    // SIMPLE FIX: Just send the data as-is, no timezone bullshit
+    onSubmit(data)
   }
 
   return (

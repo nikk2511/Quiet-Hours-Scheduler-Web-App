@@ -9,12 +9,19 @@ interface QuietBlockCardProps {
 }
 
 export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps) {
+  // SIMPLE FIX: Display exactly what was stored, no timezone conversion
   const startDate = new Date(block.startDateTime)
   const endDate = new Date(block.endDateTime)
   const now = new Date()
   const isUpcoming = startDate > now
   const isActive = startDate <= now && endDate > now
   const isPast = endDate <= now
+  
+  console.log('🕐 DISPLAY DEBUG:', {
+    stored: block.startDateTime,
+    parsed: startDate.toString(),
+    formatted: format(startDate, 'h:mm a')
+  })
 
   return (
     <div className="card p-4 hover:shadow-md transition-shadow">
