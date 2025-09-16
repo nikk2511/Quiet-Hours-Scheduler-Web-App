@@ -241,8 +241,8 @@ export async function sendEmail({
       const result = await provider.fn({ to, subject, htmlContent, textContent })
       console.log(`✅ Email sent successfully via ${provider.name}`)
       return { success: true, provider: provider.name, result }
-    } catch (error) {
-      console.warn(`❌ ${provider.name} failed:`, error.message)
+    } catch (error: any) {
+      console.warn(`❌ ${provider.name} failed:`, error?.message || 'Unknown error')
       continue
     }
   }
