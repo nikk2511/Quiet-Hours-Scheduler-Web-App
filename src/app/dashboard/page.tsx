@@ -144,11 +144,54 @@ export default function DashboardPage() {
 
   if (!user) return null
 
-  // Since we store times as strings without dates, treat all blocks as TODAY
-  // Show all blocks in upcoming section for now - they're all for today
-  const upcomingBlocks = blocks
-  const activeBlocks: QuietBlock[] = []
-  const pastBlocks: QuietBlock[] = []
+  // Parse time string to get hour and minute for comparison
+  const parseTimeString = (timeString: string) => {
+    try {
+      if (typeof timeString === 'string' && timeString.includes(':')) {
+        const [time, period] = timeString.split(' ')
+        const [hours, minutes] = time.split(':').map(Number)
+        
+        let hour24 = hours
+        if (period === 'AM' && hours === 12) {
+          hour24 = 0
+        } else if (period === 'PM' && hours !== 12) {
+          hour24 = hours + 12
+        }
+        
+        return { hours: hour24, minutes }
+      }
+    } catch (error) {
+      console.error('Error parsing time string:', error)
+    }
+    return { hours: 0, minutes: 0 }
+  }
+
+  // Get current time for comparison
+  const now = new Date()
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  const currentTimeInMinutes = currentHour * 60 + currentMinute
+
+  // Filter blocks based on time comparison (treating all as today)
+  const upcomingBlocks = blocks.filter(block => {
+    const startTime = parseTimeString(block.startDateTime as string)
+    const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
+    return startTimeInMinutes > currentTimeInMinutes
+  })
+
+  const activeBlocks = blocks.filter(block => {
+    const startTime = parseTimeString(block.startDateTime as string)
+    const endTime = parseTimeString(block.endDateTime as string)
+    const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
+    const endTimeInMinutes = endTime.hours * 60 + endTime.minutes
+    return startTimeInMinutes <= currentTimeInMinutes && endTimeInMinutes > currentTimeInMinutes
+  })
+
+  const pastBlocks = blocks.filter(block => {
+    const endTime = parseTimeString(block.endDateTime as string)
+    const endTimeInMinutes = endTime.hours * 60 + endTime.minutes
+    return endTimeInMinutes <= currentTimeInMinutes
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -222,42 +265,45 @@ export default function DashboardPage() {
         )}
 
 
-        {/* Today's Blocks */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Today's Quiet Blocks ({upcomingBlocks.length})
-          </h2>
-          {upcomingBlocks.length === 0 ? (
-            <div className="card p-8 text-center">
-              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming quiet blocks</h3>
-              <p className="text-gray-500 mb-4">Create your first quiet study session to get started</p>
-              <button
-                onClick={() => setShowForm(true)}
-                className="btn btn-primary"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Quiet Block
-              </button>
-            </div>
-          ) : (
+        {/* Upcoming Blocks */}
+        {upcomingBlocks.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Upcoming Blocks ({upcomingBlocks.length})
+            </h2>
             <div className="grid gap-4">
-              {upcomingBlocks
-                .map((block) => (
-                  <QuietBlockCard
-                    key={block._id!.toString()}
-                    block={block}
-                    onEdit={setEditingBlock}
-                    onDelete={handleDeleteBlock}
-                  />
-                ))}
+              {upcomingBlocks.map((block) => (
+                <QuietBlockCard
+                  key={block._id!.toString()}
+                  block={block}
+                  onEdit={setEditingBlock}
+                  onDelete={handleDeleteBlock}
+                />
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Past Blocks */}
+        {/* Active Blocks */}
+        {activeBlocks.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Now</h2>
+            <div className="grid gap-4">
+              {activeBlocks.map((block) => (
+                <QuietBlockCard
+                  key={block._id!.toString()}
+                  block={block}
+                  onEdit={setEditingBlock}
+                  onDelete={handleDeleteBlock}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Completed Blocks */}
         {pastBlocks.length > 0 && (
-          <div>
+          <div className="mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Completed ({pastBlocks.length})
             </h2>
@@ -272,6 +318,24 @@ export default function DashboardPage() {
                     onDelete={handleDeleteBlock}
                   />
                 ))}
+            </div>
+          </div>
+        )}
+
+        {/* No Blocks Message */}
+        {blocks.length === 0 && (
+          <div className="mb-8">
+            <div className="card p-8 text-center">
+              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No quiet blocks today</h3>
+              <p className="text-gray-500 mb-4">Create your first quiet study session to get started</p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="btn btn-primary"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Quiet Block
+              </button>
             </div>
           </div>
         )}

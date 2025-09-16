@@ -9,7 +9,7 @@ interface QuietBlockCardProps {
 }
 
 export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps) {
-  // INDIAN TIMEZONE FIX: Display times exactly as stored (Indian time)
+  // Display times exactly as stored (Indian time)
   const startTime = typeof block.startDateTime === 'string' 
     ? block.startDateTime 
     : format(new Date(block.startDateTime), 'h:mm a')
@@ -17,23 +17,47 @@ export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps)
     ? block.endDateTime 
     : format(new Date(block.endDateTime), 'h:mm a')
   
-  // For status checking, we still need date objects
-  const startDate = typeof block.startDateTime === 'string' 
-    ? new Date() // If it's a string, we can't determine the actual date for status
-    : new Date(block.startDateTime)
-  const endDate = typeof block.endDateTime === 'string' 
-    ? new Date() 
-    : new Date(block.endDateTime)
+  // Parse time string to determine status
+  const parseTimeString = (timeString: string) => {
+    try {
+      if (typeof timeString === 'string' && timeString.includes(':')) {
+        const [time, period] = timeString.split(' ')
+        const [hours, minutes] = time.split(':').map(Number)
+        
+        let hour24 = hours
+        if (period === 'AM' && hours === 12) {
+          hour24 = 0
+        } else if (period === 'PM' && hours !== 12) {
+          hour24 = hours + 12
+        }
+        
+        return { hours: hour24, minutes }
+      }
+    } catch (error) {
+      console.error('Error parsing time string:', error)
+    }
+    return { hours: 0, minutes: 0 }
+  }
+
+  // Get current time for status comparison
   const now = new Date()
-  const isUpcoming = startDate > now
-  const isActive = startDate <= now && endDate > now
-  const isPast = endDate <= now
-  
-  console.log('🇮🇳 INDIAN TIMEZONE DISPLAY:', {
-    stored: block.startDateTime,
-    display: startTime,
-    type: typeof block.startDateTime
-  })
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  const currentTimeInMinutes = currentHour * 60 + currentMinute
+
+  // Determine block status
+  const startTimeParsed = parseTimeString(block.startDateTime as string)
+  const endTimeParsed = parseTimeString(block.endDateTime as string)
+  const startTimeInMinutes = startTimeParsed.hours * 60 + startTimeParsed.minutes
+  const endTimeInMinutes = endTimeParsed.hours * 60 + endTimeParsed.minutes
+
+  const isUpcoming = startTimeInMinutes > currentTimeInMinutes
+  const isActive = startTimeInMinutes <= currentTimeInMinutes && endTimeInMinutes > currentTimeInMinutes
+  const isPast = endTimeInMinutes <= currentTimeInMinutes
+
+  // Get today's date for display
+  const today = new Date()
+  const displayDate = format(today, 'MMM d, yyyy')
 
   return (
     <div className="card p-4 hover:shadow-md transition-shadow">
@@ -42,10 +66,7 @@ export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps)
           <div className="flex items-center space-x-2 mb-2">
             <Clock className="h-4 w-4 text-gray-400" />
             <span className="text-sm font-medium text-gray-900">
-              {typeof block.startDateTime === 'string' 
-                ? 'Today' // If it's a string, we can't determine the date
-                : format(startDate, 'MMM d, yyyy')
-              }
+              {displayDate}
             </span>
             {block.notificationSent && (
               <span title="Notification sent">
