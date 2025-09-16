@@ -61,6 +61,28 @@ export async function POST(request: NextRequest) {
     // INDIAN TIMEZONE FIX: Handle IST (UTC+5:30) properly
     const now = new Date()
     
+    // Parse time string to get hour and minute for comparison
+    const parseTimeString = (timeString: string) => {
+      try {
+        if (typeof timeString === 'string' && timeString.includes(':')) {
+          const [time, period] = timeString.split(' ')
+          const [hours, minutes] = time.split(':').map(Number)
+          
+          let hour24 = hours
+          if (period === 'AM' && hours === 12) {
+            hour24 = 0
+          } else if (period === 'PM' && hours !== 12) {
+            hour24 = hours + 12
+          }
+          
+          return { hours: hour24, minutes }
+        }
+      } catch (error) {
+        console.error('Error parsing time string:', error)
+      }
+      return { hours: 0, minutes: 0 }
+    }
+    
     // Convert datetime-local to Indian time format
     const formatIndianTime = (dateTimeStr: string) => {
       // dateTimeStr is like "2024-01-16T14:40" (user's local time in India)
@@ -132,14 +154,25 @@ export async function POST(request: NextRequest) {
     const { db } = await connectToDatabase()
     const collection = db.collection('quiet_blocks')
 
-    const overlappingBlocks = await collection.findOne({
-      userId: user.id,
-      $or: [
-        { startDateTime: { $lt: end }, endDateTime: { $gt: start } }
-      ]
+    // Get all existing blocks for this user
+    const existingBlocks = await collection.find({ userId: user.id }).toArray()
+    
+    // Check for overlaps using proper time comparison
+    const hasOverlap = existingBlocks.some(existingBlock => {
+      const existingStart = parseTimeString(existingBlock.startDateTime as string)
+      const existingEnd = parseTimeString(existingBlock.endDateTime as string)
+      
+      const existingStartMinutes = existingStart.hours * 60 + existingStart.minutes
+      const existingEndMinutes = existingEnd.hours * 60 + existingEnd.minutes
+      const newStartMinutes = startTime.hours * 60 + startTime.minutes
+      const newEndMinutes = endTime.hours * 60 + endTime.minutes
+      
+      // Check if the new block overlaps with existing block
+      // Overlap occurs if: newStart < existingEnd AND newEnd > existingStart
+      return newStartMinutes < existingEndMinutes && newEndMinutes > existingStartMinutes
     })
 
-    if (overlappingBlocks) {
+    if (hasOverlap) {
       return NextResponse.json(
         { message: 'This time slot overlaps with an existing quiet block' },
         { status: 400 }
@@ -194,6 +227,28 @@ export async function PUT(request: NextRequest) {
 
     // INDIAN TIMEZONE FIX: Handle IST (UTC+5:30) properly for updates
     const now = new Date()
+    
+    // Parse time string to get hour and minute for comparison
+    const parseTimeString = (timeString: string) => {
+      try {
+        if (typeof timeString === 'string' && timeString.includes(':')) {
+          const [time, period] = timeString.split(' ')
+          const [hours, minutes] = time.split(':').map(Number)
+          
+          let hour24 = hours
+          if (period === 'AM' && hours === 12) {
+            hour24 = 0
+          } else if (period === 'PM' && hours !== 12) {
+            hour24 = hours + 12
+          }
+          
+          return { hours: hour24, minutes }
+        }
+      } catch (error) {
+        console.error('Error parsing time string:', error)
+      }
+      return { hours: 0, minutes: 0 }
+    }
     
     // Convert datetime-local to Indian time format (same as CREATE)
     const formatIndianTime = (dateTimeStr: string) => {
@@ -277,15 +332,27 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check for overlapping blocks (excluding the current block)
-    const overlappingBlocks = await collection.findOne({
+    const existingBlocks = await collection.find({ 
       _id: { $ne: new ObjectId(_id) },
-      userId: user.id,
-      $or: [
-        { startDateTime: { $lt: end }, endDateTime: { $gt: start } }
-      ]
+      userId: user.id 
+    }).toArray()
+    
+    // Check for overlaps using proper time comparison
+    const hasOverlap = existingBlocks.some(existingBlock => {
+      const existingStart = parseTimeString(existingBlock.startDateTime as string)
+      const existingEnd = parseTimeString(existingBlock.endDateTime as string)
+      
+      const existingStartMinutes = existingStart.hours * 60 + existingStart.minutes
+      const existingEndMinutes = existingEnd.hours * 60 + existingEnd.minutes
+      const newStartMinutes = startTime.hours * 60 + startTime.minutes
+      const newEndMinutes = endTime.hours * 60 + endTime.minutes
+      
+      // Check if the new block overlaps with existing block
+      // Overlap occurs if: newStart < existingEnd AND newEnd > existingStart
+      return newStartMinutes < existingEndMinutes && newEndMinutes > existingStartMinutes
     })
 
-    if (overlappingBlocks) {
+    if (hasOverlap) {
       return NextResponse.json(
         { message: 'This time slot overlaps with an existing quiet block' },
         { status: 400 }
