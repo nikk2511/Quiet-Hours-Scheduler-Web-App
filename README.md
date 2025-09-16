@@ -330,4 +330,5 @@ For support, please open an issue on GitHub or contact the development team.
 
 **Happy studying!** 📚✨
 #   Q u i e t - H o u r s - S c h e d u l e r - W e b - A p p  
+ U p d a t e d   M o n g o D B   c o n n e c t i o n   s e t t i n g s  
  
