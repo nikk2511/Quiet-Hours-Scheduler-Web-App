@@ -32,14 +32,19 @@ export default function DashboardPage() {
 
   const fetchBlocks = async () => {
     try {
+      console.log('🔄 Fetching quiet blocks...')
       const response = await fetch('/api/quiet-blocks')
       if (response.ok) {
         const data = await response.json()
+        console.log('📦 Fetched blocks:', data.blocks)
         setBlocks(data.blocks)
       } else {
+        const error = await response.json()
+        console.error('❌ Failed to fetch blocks:', error)
         toast.error('Failed to fetch quiet blocks')
       }
     } catch (error) {
+      console.error('❌ Error fetching blocks:', error)
       toast.error('Error fetching quiet blocks')
     } finally {
       setLoading(false)
@@ -49,6 +54,7 @@ export default function DashboardPage() {
   const handleCreateBlock = async (data: QuietBlockFormType) => {
     setSubmitting(true)
     try {
+      console.log('➕ Creating quiet block:', data)
       const response = await fetch('/api/quiet-blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,14 +62,18 @@ export default function DashboardPage() {
       })
 
       if (response.ok) {
+        const result = await response.json()
+        console.log('✅ Block created successfully:', result)
         toast.success('Quiet block created successfully!')
         setShowForm(false)
         fetchBlocks()
       } else {
         const error = await response.json()
+        console.error('❌ Failed to create block:', error)
         toast.error(error.message || 'Failed to create quiet block')
       }
     } catch (error) {
+      console.error('❌ Error creating block:', error)
       toast.error('Error creating quiet block')
     } finally {
       setSubmitting(false)
@@ -134,12 +144,11 @@ export default function DashboardPage() {
 
   if (!user) return null
 
-  const upcomingBlocks = blocks.filter(block => new Date(block.startDateTime) > new Date())
-  const pastBlocks = blocks.filter(block => new Date(block.endDateTime) <= new Date())
-  const activeBlocks = blocks.filter(block => {
-    const now = new Date()
-    return new Date(block.startDateTime) <= now && new Date(block.endDateTime) > now
-  })
+  // Since we store times as strings now, show all blocks as upcoming for now
+  // TODO: Implement proper time comparison with string times
+  const upcomingBlocks = blocks
+  const pastBlocks: QuietBlock[] = []
+  const activeBlocks: QuietBlock[] = []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -212,6 +221,15 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Debug Info */}
+        <div className="mb-4 p-4 bg-yellow-100 rounded-lg">
+          <h3 className="font-semibold text-yellow-800">Debug Info:</h3>
+          <p className="text-sm text-yellow-700">Total blocks: {blocks.length}</p>
+          <p className="text-sm text-yellow-700">Upcoming: {upcomingBlocks.length}</p>
+          <p className="text-sm text-yellow-700">Active: {activeBlocks.length}</p>
+          <p className="text-sm text-yellow-700">Past: {pastBlocks.length}</p>
+        </div>
+
         {/* Upcoming Blocks */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -233,7 +251,6 @@ export default function DashboardPage() {
           ) : (
             <div className="grid gap-4">
               {upcomingBlocks
-                .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime())
                 .map((block) => (
                   <QuietBlockCard
                     key={block._id!.toString()}

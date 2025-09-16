@@ -68,8 +68,25 @@ export async function POST(request: NextRequest) {
       const [year, month, day] = date.split('-').map(Number)
       const [hour, minute] = time.split(':').map(Number)
       
-      // Format time in 12-hour format for display
-      const displayTime = `${hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour)}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`
+      // Format time in proper 12-hour format (1-12 with AM/PM)
+      let displayHour = hour
+      let ampm = 'AM'
+      
+      if (hour === 0) {
+        displayHour = 12
+        ampm = 'AM'
+      } else if (hour < 12) {
+        displayHour = hour
+        ampm = 'AM'
+      } else if (hour === 12) {
+        displayHour = 12
+        ampm = 'PM'
+      } else {
+        displayHour = hour - 12
+        ampm = 'PM'
+      }
+      
+      const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`
       
       // Create date object in Indian timezone for validation
       // India is UTC+5:30, so we need to adjust for this
@@ -184,7 +201,25 @@ export async function PUT(request: NextRequest) {
       const [year, month, day] = date.split('-').map(Number)
       const [hour, minute] = time.split(':').map(Number)
       
-      const displayTime = `${hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour)}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`
+      // Format time in proper 12-hour format (1-12 with AM/PM)
+      let displayHour = hour
+      let ampm = 'AM'
+      
+      if (hour === 0) {
+        displayHour = 12
+        ampm = 'AM'
+      } else if (hour < 12) {
+        displayHour = hour
+        ampm = 'AM'
+      } else if (hour === 12) {
+        displayHour = 12
+        ampm = 'PM'
+      } else {
+        displayHour = hour - 12
+        ampm = 'PM'
+      }
+      
+      const displayTime = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`
       const indianDate = new Date(year, month - 1, day, hour, minute)
       
       return {
