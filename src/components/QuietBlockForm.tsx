@@ -44,6 +44,16 @@ export function QuietBlockForm({ block, onSubmit, onCancel, loading }: QuietBloc
     return start >= minTime || 'Start time must be at least 1 minute in the future'
   }
 
+  const handleFormSubmit = (data: QuietBlockFormType) => {
+    // Add timezone offset to help server parse times correctly
+    const timezoneOffset = new Date().getTimezoneOffset() // minutes difference from UTC
+    const dataWithTimezone = {
+      ...data,
+      timezoneOffset // Send user's timezone offset to server
+    }
+    onSubmit(dataWithTimezone)
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="card max-w-md w-full p-6">
@@ -59,7 +69,7 @@ export function QuietBlockForm({ block, onSubmit, onCancel, loading }: QuietBloc
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description

@@ -21,12 +21,14 @@ export interface QuietBlockForm {
   startDateTime: string
   endDateTime: string
   description: string
+  timezoneOffset?: number // Optional for backward compatibility
 }
 
 export interface CreateQuietBlockRequest {
   startDateTime: string
   endDateTime: string
   description: string
+  timezoneOffset?: number // User's timezone offset in minutes
 }
 
 export interface UpdateQuietBlockRequest {
@@ -34,4 +36,5 @@ export interface UpdateQuietBlockRequest {
   startDateTime: string
   endDateTime: string
   description: string
+  timezoneOffset?: number // User's timezone offset in minutes
 }

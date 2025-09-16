@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateQuietBlockRequest = await request.json()
-    const { startDateTime, endDateTime, description } = body
+    const { startDateTime, endDateTime, description, timezoneOffset = 0 } = body
 
     // Validation
     if (!startDateTime || !endDateTime || !description) {
@@ -58,29 +58,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse datetime-local strings correctly
-    // datetime-local gives us "2024-01-16T14:40" which should be treated as LOCAL time
-    // But new Date() can interpret this as UTC in Node.js environment
-    
-    const parseLocalDateTime = (dateTimeStr: string) => {
-      // dateTimeStr is like "2024-01-16T14:40"
-      const [date, time] = dateTimeStr.split('T')
-      const [year, month, day] = date.split('-').map(Number)
-      const [hour, minute] = time.split(':').map(Number)
+    // Parse datetime-local strings with proper timezone handling
+    const parseUserDateTime = (dateTimeStr: string, timezoneOffset: number) => {
+      // dateTimeStr is like "2024-01-16T14:40" (user's local time)
+      // timezoneOffset is minutes difference from UTC (e.g., -330 for India IST)
       
-      // Create Date object in LOCAL timezone
-      return new Date(year, month - 1, day, hour, minute)
+      // Create date as if it were UTC first
+      const utcDate = new Date(dateTimeStr + 'Z') // Add Z to force UTC parsing
+      
+      // Adjust for user's timezone offset
+      // getTimezoneOffset() returns positive for behind UTC, negative for ahead
+      // We want to store the user's actual local time as UTC
+      const userLocalTime = new Date(utcDate.getTime() - (timezoneOffset * 60 * 1000))
+      
+      return userLocalTime
     }
     
-    const start = parseLocalDateTime(startDateTime)
-    const end = parseLocalDateTime(endDateTime)
+    const start = parseUserDateTime(startDateTime, timezoneOffset)
+    const end = parseUserDateTime(endDateTime, timezoneOffset)
     const now = new Date()
     
     console.log('🕐 CREATE Timezone Debug:')
-    console.log('Input strings:', { startDateTime, endDateTime })
-    console.log('Parsed LOCAL dates:', { 
-      start: start.toString(), 
-      end: end.toString() 
+    console.log('Input strings:', { startDateTime, endDateTime, timezoneOffset })
+    console.log('User local times stored as UTC:', { 
+      start: start.toISOString(), 
+      end: end.toISOString() 
+    })
+    console.log('Times should display as:', {
+      start: start.toLocaleString(),
+      end: end.toLocaleString()
     })
     
     // Add 30 seconds buffer to account for processing time
@@ -154,7 +160,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body: UpdateQuietBlockRequest = await request.json()
-    const { _id, startDateTime, endDateTime, description } = body
+    const { _id, startDateTime, endDateTime, description, timezoneOffset = 0 } = body
 
     // Validation
     if (!_id || !startDateTime || !endDateTime || !description) {
@@ -164,23 +170,22 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Parse datetime-local strings correctly (same as CREATE method)
-    const parseLocalDateTime = (dateTimeStr: string) => {
-      const [date, time] = dateTimeStr.split('T')
-      const [year, month, day] = date.split('-').map(Number)
-      const [hour, minute] = time.split(':').map(Number)
-      return new Date(year, month - 1, day, hour, minute)
+    // Parse datetime-local strings with proper timezone handling (same as CREATE method)
+    const parseUserDateTime = (dateTimeStr: string, timezoneOffset: number) => {
+      const utcDate = new Date(dateTimeStr + 'Z') // Add Z to force UTC parsing
+      const userLocalTime = new Date(utcDate.getTime() - (timezoneOffset * 60 * 1000))
+      return userLocalTime
     }
     
-    const start = parseLocalDateTime(startDateTime)
-    const end = parseLocalDateTime(endDateTime)
+    const start = parseUserDateTime(startDateTime, timezoneOffset)
+    const end = parseUserDateTime(endDateTime, timezoneOffset)
     const now = new Date()
     
     console.log('🕐 UPDATE Timezone Debug:')
-    console.log('Input strings:', { startDateTime, endDateTime })
-    console.log('Parsed LOCAL dates:', { 
-      start: start.toString(), 
-      end: end.toString() 
+    console.log('Input strings:', { startDateTime, endDateTime, timezoneOffset })
+    console.log('User local times stored as UTC:', { 
+      start: start.toISOString(), 
+      end: end.toISOString() 
     })
     
     // Add 30 seconds buffer to account for processing time
