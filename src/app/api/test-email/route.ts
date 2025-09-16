@@ -52,11 +52,27 @@ export async function POST(request: NextRequest) {
     const currentTimeInMinutes = currentHour * 60 + currentMinute
     const tenMinutesFromNowInMinutes = currentTimeInMinutes + 10
 
+    console.log('⏰ Time comparison:', {
+      currentTime: now.toLocaleTimeString(),
+      currentTimeInMinutes,
+      tenMinutesFromNowInMinutes,
+      timeWindow: `${currentTimeInMinutes} - ${tenMinutesFromNowInMinutes}`
+    })
+
     // Filter blocks that start in the next 10 minutes
     const blocksNeedingNotification = blocks.filter(block => {
       if (typeof block.startDateTime === 'string') {
         const startTime = parseTimeString(block.startDateTime)
         const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
+        
+        console.log('🔍 Block analysis:', {
+          description: block.description,
+          startTime: block.startDateTime,
+          parsedTime: startTime,
+          startTimeInMinutes,
+          inWindow: startTimeInMinutes >= currentTimeInMinutes && startTimeInMinutes <= tenMinutesFromNowInMinutes
+        })
+        
         return startTimeInMinutes >= currentTimeInMinutes && startTimeInMinutes <= tenMinutesFromNowInMinutes
       }
       return false
@@ -79,6 +95,13 @@ export async function POST(request: NextRequest) {
       totalBlocks: blocks.length,
       blocksNeedingNotification: blocksNeedingNotification.length,
       testBlocks: testBlocks.length,
+      allBlocks: blocks.map(block => ({
+        id: block._id,
+        description: block.description,
+        startTime: block.startDateTime,
+        endTime: block.endDateTime,
+        notificationSent: block.notificationSent
+      })),
       blocks: testBlocks.map(block => ({
         id: block._id,
         description: block.description,
