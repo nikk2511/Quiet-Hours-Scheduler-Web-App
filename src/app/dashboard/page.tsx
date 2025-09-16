@@ -144,54 +144,11 @@ export default function DashboardPage() {
 
   if (!user) return null
 
-  // Parse time string to get hour and minute for comparison
-  const parseTimeString = (timeString: string) => {
-    try {
-      if (typeof timeString === 'string' && timeString.includes(':')) {
-        const [time, period] = timeString.split(' ')
-        const [hours, minutes] = time.split(':').map(Number)
-        
-        let hour24 = hours
-        if (period === 'AM' && hours === 12) {
-          hour24 = 0
-        } else if (period === 'PM' && hours !== 12) {
-          hour24 = hours + 12
-        }
-        
-        return { hours: hour24, minutes }
-      }
-    } catch (error) {
-      console.error('Error parsing time string:', error)
-    }
-    return { hours: 0, minutes: 0 }
-  }
-
-  // Get current time for comparison
-  const now = new Date()
-  const currentHour = now.getHours()
-  const currentMinute = now.getMinutes()
-  const currentTimeInMinutes = currentHour * 60 + currentMinute
-
-  // Filter blocks based on time comparison
-  const upcomingBlocks = blocks.filter(block => {
-    const startTime = parseTimeString(block.startDateTime as string)
-    const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
-    return startTimeInMinutes > currentTimeInMinutes
-  })
-
-  const activeBlocks = blocks.filter(block => {
-    const startTime = parseTimeString(block.startDateTime as string)
-    const endTime = parseTimeString(block.endDateTime as string)
-    const startTimeInMinutes = startTime.hours * 60 + startTime.minutes
-    const endTimeInMinutes = endTime.hours * 60 + endTime.minutes
-    return startTimeInMinutes <= currentTimeInMinutes && endTimeInMinutes > currentTimeInMinutes
-  })
-
-  const pastBlocks = blocks.filter(block => {
-    const endTime = parseTimeString(block.endDateTime as string)
-    const endTimeInMinutes = endTime.hours * 60 + endTime.minutes
-    return endTimeInMinutes <= currentTimeInMinutes
-  })
+  // Since we store times as strings without dates, treat all blocks as TODAY
+  // Show all blocks in upcoming section for now - they're all for today
+  const upcomingBlocks = blocks
+  const activeBlocks: QuietBlock[] = []
+  const pastBlocks: QuietBlock[] = []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -264,20 +221,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Debug Info */}
-        <div className="mb-4 p-4 bg-yellow-100 rounded-lg">
-          <h3 className="font-semibold text-yellow-800">Debug Info:</h3>
-          <p className="text-sm text-yellow-700">Current time: {now.toLocaleTimeString()}</p>
-          <p className="text-sm text-yellow-700">Total blocks: {blocks.length}</p>
-          <p className="text-sm text-yellow-700">Upcoming: {upcomingBlocks.length}</p>
-          <p className="text-sm text-yellow-700">Active: {activeBlocks.length}</p>
-          <p className="text-sm text-yellow-700">Past: {pastBlocks.length}</p>
-        </div>
 
-        {/* Upcoming Blocks */}
+        {/* Today's Blocks */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Upcoming Blocks ({upcomingBlocks.length})
+            Today's Quiet Blocks ({upcomingBlocks.length})
           </h2>
           {upcomingBlocks.length === 0 ? (
             <div className="card p-8 text-center">
