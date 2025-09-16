@@ -1,0 +1,261 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabase } from '@/lib/supabase-server'
+import { connectToDatabase } from '@/lib/mongodb'
+import { QuietBlock, CreateQuietBlockRequest, UpdateQuietBlockRequest } from '@/types'
+import { ObjectId } from 'mongodb'
+
+// GET - Fetch all quiet blocks for the authenticated user
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { db } = await connectToDatabase()
+    const collection = db.collection('quiet_blocks')
+
+    const blocks = await collection
+      .find({ userId: user.id })
+      .sort({ startDateTime: 1 })
+      .toArray()
+
+    return NextResponse.json({ 
+      blocks: blocks.map(block => ({
+        ...block,
+        _id: block._id.toString()
+      }))
+    })
+  } catch (error) {
+    console.error('Error fetching quiet blocks:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST - Create a new quiet block
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body: CreateQuietBlockRequest = await request.json()
+    const { startDateTime, endDateTime, description } = body
+
+    // Validation
+    if (!startDateTime || !endDateTime || !description) {
+      return NextResponse.json(
+        { message: 'Start time, end time, and description are required' },
+        { status: 400 }
+      )
+    }
+
+    const start = new Date(startDateTime)
+    const end = new Date(endDateTime)
+    const now = new Date()
+
+    if (start <= now) {
+      return NextResponse.json(
+        { message: 'Start time must be in the future' },
+        { status: 400 }
+      )
+    }
+
+    if (end <= start) {
+      return NextResponse.json(
+        { message: 'End time must be after start time' },
+        { status: 400 }
+      )
+    }
+
+    // Check for overlapping blocks
+    const { db } = await connectToDatabase()
+    const collection = db.collection('quiet_blocks')
+
+    const overlappingBlocks = await collection.findOne({
+      userId: user.id,
+      $or: [
+        { startDateTime: { $lt: end }, endDateTime: { $gt: start } }
+      ]
+    })
+
+    if (overlappingBlocks) {
+      return NextResponse.json(
+        { message: 'This time slot overlaps with an existing quiet block' },
+        { status: 400 }
+      )
+    }
+
+    const quietBlock: Omit<QuietBlock, '_id'> = {
+      userId: user.id,
+      startDateTime: start,
+      endDateTime: end,
+      description: description.trim(),
+      notificationSent: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const result = await collection.insertOne(quietBlock)
+
+    return NextResponse.json({
+      message: 'Quiet block created successfully',
+      blockId: result.insertedId
+    })
+  } catch (error) {
+    console.error('Error creating quiet block:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update an existing quiet block
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = createServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body: UpdateQuietBlockRequest = await request.json()
+    const { _id, startDateTime, endDateTime, description } = body
+
+    // Validation
+    if (!_id || !startDateTime || !endDateTime || !description) {
+      return NextResponse.json(
+        { message: 'ID, start time, end time, and description are required' },
+        { status: 400 }
+      )
+    }
+
+    const start = new Date(startDateTime)
+    const end = new Date(endDateTime)
+
+    if (end <= start) {
+      return NextResponse.json(
+        { message: 'End time must be after start time' },
+        { status: 400 }
+      )
+    }
+
+    const { db } = await connectToDatabase()
+    const collection = db.collection('quiet_blocks')
+
+    // Check if block exists and belongs to user
+    const existingBlock = await collection.findOne({
+      _id: new ObjectId(_id),
+      userId: user.id
+    })
+
+    if (!existingBlock) {
+      return NextResponse.json(
+        { message: 'Quiet block not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check for overlapping blocks (excluding the current block)
+    const overlappingBlocks = await collection.findOne({
+      _id: { $ne: new ObjectId(_id) },
+      userId: user.id,
+      $or: [
+        { startDateTime: { $lt: end }, endDateTime: { $gt: start } }
+      ]
+    })
+
+    if (overlappingBlocks) {
+      return NextResponse.json(
+        { message: 'This time slot overlaps with an existing quiet block' },
+        { status: 400 }
+      )
+    }
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(_id), userId: user.id },
+      {
+        $set: {
+          startDateTime: start,
+          endDateTime: end,
+          description: description.trim(),
+          updatedAt: new Date()
+        }
+      }
+    )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { message: 'Quiet block not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      message: 'Quiet block updated successfully'
+    })
+  } catch (error) {
+    console.error('Error updating quiet block:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete a quiet block
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = createServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { _id } = body
+
+    if (!_id) {
+      return NextResponse.json(
+        { message: 'Block ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const { db } = await connectToDatabase()
+    const collection = db.collection('quiet_blocks')
+
+    const result = await collection.deleteOne({
+      _id: new ObjectId(_id),
+      userId: user.id
+    })
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { message: 'Quiet block not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      message: 'Quiet block deleted successfully'
+    })
+  } catch (error) {
+    console.error('Error deleting quiet block:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

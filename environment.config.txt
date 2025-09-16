@@ -1,0 +1,39 @@
+# Environment Configuration Template
+# Copy this file to .env.local and fill in your actual values
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# MongoDB Configuration
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DB_NAME=quiet_hours_scheduler
+
+# Email Configuration - Choose ONE of these options:
+
+# Option 1: Resend (Recommended - easiest setup, generous free tier)
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=noreply@yourdomain.com
+
+# Option 2: EmailJS (Client-side, completely free)
+NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_emailjs_service_id
+NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_emailjs_template_id
+NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
+
+# Option 3: Brevo (formerly Sendinblue - good free tier)
+BREVO_API_KEY=your_brevo_api_key
+
+# Option 4: Mailgun (classic choice)
+MAILGUN_API_KEY=your_mailgun_api_key
+MAILGUN_DOMAIN=your_mailgun_domain
+
+# Option 5: Gmail SMTP (use your Gmail account)
+GMAIL_USER=your_email@gmail.com
+GMAIL_APP_PASSWORD=your_gmail_app_password
+
+# Option 6: SendGrid (if you prefer this)
+SENDGRID_API_KEY=your_sendgrid_api_key
+
+# Application URLs
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
