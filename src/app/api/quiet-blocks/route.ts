@@ -164,8 +164,8 @@ export async function POST(request: NextRequest) {
       
       const existingStartMinutes = existingStart.hours * 60 + existingStart.minutes
       const existingEndMinutes = existingEnd.hours * 60 + existingEnd.minutes
-      const newStartMinutes = start.hours * 60 + start.minutes
-      const newEndMinutes = end.hours * 60 + end.minutes
+      const newStartMinutes = startTime.hours * 60 + startTime.minutes
+      const newEndMinutes = endTime.hours * 60 + endTime.minutes
       
       // Check if the new block overlaps with existing block
       // Overlap occurs if: newStart < existingEnd AND newEnd > existingStart
@@ -344,8 +344,8 @@ export async function PUT(request: NextRequest) {
       
       const existingStartMinutes = existingStart.hours * 60 + existingStart.minutes
       const existingEndMinutes = existingEnd.hours * 60 + existingEnd.minutes
-      const newStartMinutes = start.hours * 60 + start.minutes
-      const newEndMinutes = end.hours * 60 + end.minutes
+      const newStartMinutes = startTime.hours * 60 + startTime.minutes
+      const newEndMinutes = endTime.hours * 60 + endTime.minutes
       
       // Check if the new block overlaps with existing block
       // Overlap occurs if: newStart < existingEnd AND newEnd > existingStart
