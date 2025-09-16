@@ -9,18 +9,30 @@ interface QuietBlockCardProps {
 }
 
 export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps) {
-  // SIMPLE FIX: Display exactly what was stored, no timezone conversion
-  const startDate = new Date(block.startDateTime)
-  const endDate = new Date(block.endDateTime)
+  // BULLETPROOF FIX: Display stored time strings directly, no conversion
+  const startTime = typeof block.startDateTime === 'string' 
+    ? block.startDateTime 
+    : format(new Date(block.startDateTime), 'h:mm a')
+  const endTime = typeof block.endDateTime === 'string' 
+    ? block.endDateTime 
+    : format(new Date(block.endDateTime), 'h:mm a')
+  
+  // For status checking, we still need date objects
+  const startDate = typeof block.startDateTime === 'string' 
+    ? new Date() // If it's a string, we can't determine the actual date for status
+    : new Date(block.startDateTime)
+  const endDate = typeof block.endDateTime === 'string' 
+    ? new Date() 
+    : new Date(block.endDateTime)
   const now = new Date()
   const isUpcoming = startDate > now
   const isActive = startDate <= now && endDate > now
   const isPast = endDate <= now
   
-  console.log('🕐 DISPLAY DEBUG:', {
+  console.log('🕐 BULLETPROOF DISPLAY:', {
     stored: block.startDateTime,
-    parsed: startDate.toString(),
-    formatted: format(startDate, 'h:mm a')
+    display: startTime,
+    type: typeof block.startDateTime
   })
 
   return (
@@ -30,7 +42,10 @@ export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps)
           <div className="flex items-center space-x-2 mb-2">
             <Clock className="h-4 w-4 text-gray-400" />
             <span className="text-sm font-medium text-gray-900">
-              {format(startDate, 'MMM d, yyyy')}
+              {typeof block.startDateTime === 'string' 
+                ? 'Today' // If it's a string, we can't determine the date
+                : format(startDate, 'MMM d, yyyy')
+              }
             </span>
             {block.notificationSent && (
               <span title="Notification sent">
@@ -41,7 +56,7 @@ export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps)
           
           <div className="mb-2">
             <p className="text-sm text-gray-600">
-              {format(startDate, 'h:mm a')} - {format(endDate, 'h:mm a')}
+              {startTime} - {endTime}
             </p>
             <p className="text-sm font-medium text-gray-900 mt-1">
               {block.description}

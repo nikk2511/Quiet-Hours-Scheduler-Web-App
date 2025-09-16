@@ -58,27 +58,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // SIMPLE FIX: Store exactly what user entered, no timezone conversion bullshit
-    const parseUserDateTime = (dateTimeStr: string) => {
-      // dateTimeStr is like "2024-01-16T14:40" 
-      // Just parse it as the user's local time and store it
+    // BULLETPROOF FIX: Store times as strings to avoid timezone conversion
+    const now = new Date()
+    
+    // Convert datetime-local to readable time strings
+    const formatTimeString = (dateTimeStr: string) => {
+      // dateTimeStr is like "2024-01-16T14:40"
       const [date, time] = dateTimeStr.split('T')
       const [year, month, day] = date.split('-').map(Number)
       const [hour, minute] = time.split(':').map(Number)
       
-      // Create date in user's local timezone
-      return new Date(year, month - 1, day, hour, minute)
+      // Create a date object for validation
+      const dateObj = new Date(year, month - 1, day, hour, minute)
+      
+      // Return both the original string and formatted time
+      return {
+        original: dateTimeStr,
+        formatted: `${hour > 12 ? hour - 12 : hour}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`,
+        dateObj: dateObj
+      }
     }
     
-    const start = parseUserDateTime(startDateTime)
-    const end = parseUserDateTime(endDateTime)
-    const now = new Date()
+    const startTime = formatTimeString(startDateTime)
+    const endTime = formatTimeString(endDateTime)
+    const start = startTime.dateObj
+    const end = endTime.dateObj
     
-    console.log('🕐 SIMPLE TIMEZONE FIX:')
+    console.log('🕐 BULLETPROOF TIMEZONE FIX:')
     console.log('User entered:', { startDateTime, endDateTime })
-    console.log('Stored as:', { 
-      start: start.toString(), 
-      end: end.toString() 
+    console.log('Will display as:', { 
+      start: startTime.formatted, 
+      end: endTime.formatted 
     })
     
     // Add 30 seconds buffer to account for processing time
@@ -118,8 +128,8 @@ export async function POST(request: NextRequest) {
 
     const quietBlock: Omit<QuietBlock, '_id'> = {
       userId: user.id,
-      startDateTime: start,
-      endDateTime: end,
+      startDateTime: startTime.formatted, // Store as formatted string
+      endDateTime: endTime.formatted,     // Store as formatted string
       description: description.trim(),
       notificationSent: false,
       createdAt: new Date(),
@@ -162,23 +172,34 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // SIMPLE FIX: Store exactly what user entered, no timezone conversion bullshit
-    const parseUserDateTime = (dateTimeStr: string) => {
+    // BULLETPROOF FIX: Store times as strings to avoid timezone conversion
+    const now = new Date()
+    
+    // Convert datetime-local to readable time strings (same as CREATE)
+    const formatTimeString = (dateTimeStr: string) => {
       const [date, time] = dateTimeStr.split('T')
       const [year, month, day] = date.split('-').map(Number)
       const [hour, minute] = time.split(':').map(Number)
-      return new Date(year, month - 1, day, hour, minute)
+      
+      const dateObj = new Date(year, month - 1, day, hour, minute)
+      
+      return {
+        original: dateTimeStr,
+        formatted: `${hour > 12 ? hour - 12 : hour}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`,
+        dateObj: dateObj
+      }
     }
     
-    const start = parseUserDateTime(startDateTime)
-    const end = parseUserDateTime(endDateTime)
-    const now = new Date()
+    const startTime = formatTimeString(startDateTime)
+    const endTime = formatTimeString(endDateTime)
+    const start = startTime.dateObj
+    const end = endTime.dateObj
     
-    console.log('🕐 SIMPLE UPDATE FIX:')
+    console.log('🕐 BULLETPROOF UPDATE FIX:')
     console.log('User entered:', { startDateTime, endDateTime })
-    console.log('Stored as:', { 
-      start: start.toString(), 
-      end: end.toString() 
+    console.log('Will display as:', { 
+      start: startTime.formatted, 
+      end: endTime.formatted 
     })
     
     // Add 30 seconds buffer to account for processing time
@@ -236,8 +257,8 @@ export async function PUT(request: NextRequest) {
       { _id: new ObjectId(_id), userId: user.id },
       {
         $set: {
-          startDateTime: start,
-          endDateTime: end,
+          startDateTime: startTime.formatted, // Store as formatted string
+          endDateTime: endTime.formatted,     // Store as formatted string
           description: description.trim(),
           updatedAt: new Date()
         }

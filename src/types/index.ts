@@ -9,8 +9,8 @@ export interface User {
 export interface QuietBlock {
   _id?: ObjectId
   userId: string
-  startDateTime: Date
-  endDateTime: Date
+  startDateTime: Date | string  // Allow both Date and string for flexibility
+  endDateTime: Date | string
   description: string
   notificationSent: boolean
   createdAt: Date
