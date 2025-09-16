@@ -1,67 +1,53 @@
-# Quiet Hours Scheduler Web App
+# 🤫 Quiet Hours Scheduler Web App
 
 A full-stack web application for scheduling quiet study time blocks with automated email reminders sent 10 minutes before each session starts.
 
-## 🚀 Features
+## 🚀 Live Demo
 
-- **User Authentication**: Secure signup/login with Supabase Auth
-- **Quiet Block Management**: Create, edit, and delete quiet study time blocks
-- **Email Notifications**: Automated reminders 10 minutes before sessions start
-- **Responsive Design**: Mobile and desktop friendly interface
-- **Real-time Updates**: Dashboard shows active, upcoming, and completed blocks
-- **Overlap Prevention**: System prevents scheduling overlapping time blocks
-- **CRON Job Scheduler**: Automated background job for sending email notifications
+**🌐 Production App:** https://quiet-hours-scheduler-web-app.vercel.app
+
+## ✨ Features
+
+- **🔐 Secure Authentication** - Sign up/login with Supabase Auth
+- **📅 Quiet Block Management** - Create, edit, and delete study time blocks
+- **📧 Email Notifications** - Automated reminders 10 minutes before sessions
+- **📱 Responsive Design** - Works perfectly on mobile and desktop
+- **⏰ Real-time Status** - See active, upcoming, and completed blocks
+- **🚫 Overlap Prevention** - System prevents scheduling conflicts
+- **🌍 Timezone Support** - Works correctly across all timezones
+- **🎨 Modern UI** - Clean interface built with Tailwind CSS
 
 ## 🛠 Tech Stack
 
-- **Frontend**: Next.js 14 (React with App Router)
-- **Backend**: Next.js API Routes
-- **Database**: MongoDB for storing quiet block schedules
-- **Authentication**: Supabase Auth
-- **Email Service**: SendGrid (with Gmail fallback option)
-- **CRON Jobs**: Supabase Edge Functions
-- **Styling**: Tailwind CSS
-- **State Management**: React Context
-- **Forms**: React Hook Form
-- **Notifications**: React Hot Toast
+- **Frontend:** Next.js 14 (React with App Router)
+- **Backend:** Next.js API Routes
+- **Database:** MongoDB Atlas
+- **Authentication:** Supabase Auth
+- **Email Service:** Resend (with multiple provider fallbacks)
+- **CRON Jobs:** Supabase Edge Functions
+- **Styling:** Tailwind CSS
+- **State Management:** React Context
+- **Forms:** React Hook Form
+- **Notifications:** React Hot Toast
 
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following:
-
-- Node.js (v18 or higher)
-- npm or yarn
-- MongoDB Atlas account or local MongoDB instance
-- Supabase account
-- SendGrid account (for email notifications)
-- Git
-
-## ⚙️ Installation & Setup
+## 🚀 Quick Start
 
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd quiet-hours-scheduler
+git clone https://github.com/nikk2511/Quiet-Hours-Scheduler-Web-App.git
+cd Quiet-Hours-Scheduler-Web-App
 ```
 
 ### 2. Install Dependencies
 
 ```bash
 npm install
-# or
-yarn install
 ```
 
-### 3. Environment Configuration
+### 3. Environment Setup
 
-Copy the environment template:
-
-```bash
-cp environment.config.txt .env.local
-```
-
-Fill in your environment variables in `.env.local`:
+Create a `.env.local` file in the root directory:
 
 ```env
 # Supabase Configuration
@@ -70,127 +56,116 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # MongoDB Configuration
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/quiet_hours_scheduler
 MONGODB_DB_NAME=quiet_hours_scheduler
 
-# Email Configuration (SendGrid recommended)
-SENDGRID_API_KEY=your_sendgrid_api_key
+# Email Configuration (Resend - Recommended)
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=your_email@domain.com
 
-# Gmail SMTP (Alternative to SendGrid)
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
-EMAIL_FROM=your_email@gmail.com
-
-# Application URLs
+# Application URL
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-### 4. Set Up Supabase
-
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Go to Project Settings → API to get your URL and keys
-3. Enable Email Authentication:
-   - Go to Authentication → Settings
-   - Enable "Enable email confirmations" if desired
-   - Add your site URL to "Site URL" and "Redirect URLs"
-
-### 5. Set Up MongoDB
-
-1. Create a MongoDB Atlas account at [mongodb.com](https://www.mongodb.com/)
-2. Create a new cluster
-3. Create a database user with read/write permissions
-4. Get your connection string and add it to `.env.local`
-5. The application will automatically create the required collections
-
-### 6. Set Up SendGrid (Email Service)
-
-1. Create a SendGrid account at [sendgrid.com](https://sendgrid.com/)
-2. Generate an API key with "Mail Send" permissions
-3. Add the API key to your `.env.local` file
-4. (Optional) Verify your sender domain for better deliverability
-
-### 7. Initialize Supabase Locally (Optional)
-
-If you want to run Supabase locally for development:
-
-```bash
-# Install Supabase CLI
-npm install -g @supabase/cli
-
-# Start local Supabase
-supabase start
-
-# Deploy edge function
-supabase functions deploy email-notifications
-```
-
-## 🚦 Running the Application
-
-### Development Mode
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Production Build
+## 🔧 Setup Services
+
+### Supabase Setup
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to **Settings** → **API** to get your URL and keys
+3. **Optional:** Disable email confirmations in **Authentication** → **Settings** for easier development
+
+### MongoDB Atlas Setup
+
+1. Create an account at [mongodb.com](https://www.mongodb.com/)
+2. Create a new cluster
+3. Create a database user with read/write permissions
+4. Add your IP address to the whitelist (or use `0.0.0.0/0` for development)
+5. Get your connection string and add it to `.env.local`
+
+### Email Service Setup (Resend)
+
+1. Create an account at [resend.com](https://resend.com/)
+2. Generate an API key
+3. Add the key to your `.env.local` file
+4. **Optional:** Verify your domain for better deliverability
+
+## 📧 Email Notifications Setup
+
+### Deploy Edge Function
 
 ```bash
-npm run build
-npm run start
-# or
-yarn build
-yarn start
-```
+# Install Supabase CLI
+npm install -g supabase
 
-## 📧 Setting Up Email Notifications
+# Login to Supabase
+supabase login
 
-### Method 1: SendGrid (Recommended)
+# Link your project
+supabase link --project-ref your_project_ref
 
-1. Create a SendGrid account and get your API key
-2. Add `SENDGRID_API_KEY` to your environment variables
-3. Deploy the Supabase Edge Function:
-
-```bash
+# Deploy the email function
 supabase functions deploy email-notifications
 ```
 
-4. Set up a CRON trigger to call the function every minute:
-   - Use GitHub Actions, Vercel Cron, or any CRON service
-   - Make a POST request to your Edge Function URL every minute
+### Set Environment Variables in Supabase
 
-### Method 2: Gmail SMTP
+Go to your Supabase Dashboard → **Settings** → **Edge Functions** and add:
 
-1. Enable 2-factor authentication on your Gmail account
-2. Generate an app password
-3. Add `EMAIL_USER`, `EMAIL_PASSWORD`, and `EMAIL_FROM` to your environment
+- `MONGODB_URI` - Your MongoDB connection string
+- `MONGODB_DB_NAME` - `quiet_hours_scheduler`
+- `RESEND_API_KEY` - Your Resend API key
+- `EMAIL_FROM` - Your sender email
 
-### CRON Job Setup
+### Set Up CRON Scheduler
 
-The email notifications require a CRON job that runs every minute. You can set this up using:
+In your Supabase Dashboard → **SQL Editor**, run:
 
-**Option 1: GitHub Actions** (Add to `.github/workflows/cron.yml`):
+```sql
+-- Enable pg_cron extension
+CREATE EXTENSION IF NOT EXISTS pg_cron;
 
-```yaml
-name: Email Notifications CRON
-on:
-  schedule:
-    - cron: '* * * * *' # Every minute
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Call Edge Function
-        run: |
-          curl -X POST "https://your-project.supabase.co/functions/v1/email-notifications" \
-               -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}"
+-- Schedule email notifications every minute
+SELECT cron.schedule(
+  'email-notifications-cron',
+  '*/1 * * * *',
+  $$
+  SELECT 
+    net.http_post(
+      url := 'https://your-project.supabase.co/functions/v1/email-notifications',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY'
+      ),
+      body := jsonb_build_object('action', 'check_notifications')
+    ) as request_id;
+  $$
+);
 ```
 
-**Option 2: External CRON Service**
-Use services like cron-job.org, EasyCron, or Vercel Cron to make HTTP requests to your Edge Function.
+## 🚀 Deployment
+
+### Deploy to Vercel
+
+1. Push your code to GitHub
+2. Connect your repository to [Vercel](https://vercel.com)
+3. Add all environment variables in Vercel dashboard
+4. Deploy!
+
+### Deploy to Other Platforms
+
+The app works on any platform that supports Next.js:
+- **Netlify** - Connect GitHub repo
+- **Railway** - Deploy from GitHub
+- **DigitalOcean App Platform** - Deploy from GitHub
 
 ## 📁 Project Structure
 
@@ -199,33 +174,35 @@ quiet-hours-scheduler/
 ├── src/
 │   ├── app/                    # Next.js app directory
 │   │   ├── api/               # API routes
-│   │   ├── auth/              # Authentication pages
-│   │   ├── dashboard/         # Dashboard page
-│   │   └── layout.tsx         # Root layout
+│   │   │   └── quiet-blocks/  # CRUD operations
+│   │   ├── auth/              # Login/signup pages
+│   │   ├── dashboard/         # Main dashboard
+│   │   └── setup/             # Setup guide
 │   ├── components/            # React components
-│   │   ├── AuthProvider.tsx   # Auth context provider
-│   │   ├── Navbar.tsx         # Navigation bar
-│   │   ├── QuietBlockCard.tsx # Block display component
-│   │   └── QuietBlockForm.tsx # Block creation/editing form
-│   ├── lib/                   # Utility libraries
-│   │   ├── mongodb.ts         # MongoDB connection
-│   │   └── supabase.ts        # Supabase clients
-│   └── types/                 # TypeScript type definitions
+│   │   ├── AuthProvider.tsx   # Authentication context
+│   │   ├── Navbar.tsx         # Navigation
+│   │   ├── QuietBlockCard.tsx # Block display
+│   │   └── QuietBlockForm.tsx # Block creation form
+│   ├── lib/                   # Utilities
+│   │   ├── mongodb.ts         # Database connection
+│   │   ├── supabase.ts        # Supabase clients
+│   │   └── utils.ts           # Helper functions
+│   └── types/                 # TypeScript definitions
 ├── supabase/
-│   ├── functions/             # Edge Functions
-│   │   └── email-notifications/
-│   └── config.toml           # Supabase configuration
+│   └── functions/
+│       └── email-notifications/ # Edge function for emails
 ├── package.json
 ├── tailwind.config.js
 └── README.md
 ```
 
-## 🔧 API Routes
+## 🔧 API Endpoints
 
 - `GET /api/quiet-blocks` - Fetch user's quiet blocks
 - `POST /api/quiet-blocks` - Create new quiet block
 - `PUT /api/quiet-blocks` - Update existing quiet block
 - `DELETE /api/quiet-blocks` - Delete quiet block
+- `GET /api/health` - Health check endpoint
 
 ## 🗃 Data Model
 
@@ -235,80 +212,66 @@ quiet-hours-scheduler/
 interface QuietBlock {
   _id: ObjectId
   userId: string              // Supabase user ID
-  startDateTime: Date         // Start time of quiet block
-  endDateTime: Date          // End time of quiet block
-  description: string        // Block description
-  notificationSent: boolean  // Whether email notification was sent
-  createdAt: Date           // Creation timestamp
-  updatedAt: Date          // Last update timestamp
+  startDateTime: string       // Start time (e.g., "2:51 PM")
+  endDateTime: string         // End time (e.g., "3:30 PM")
+  description: string         // Block description
+  notificationSent: boolean   // Email notification status
+  createdAt: Date            // Creation timestamp
+  updatedAt: Date            // Last update timestamp
 }
 ```
-
-## 🚀 Deployment
-
-### Deploy to Vercel
-
-1. Push your code to GitHub
-2. Connect your GitHub repo to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy the application
-
-### Deploy Supabase Edge Function
-
-```bash
-# Deploy the edge function
-supabase functions deploy email-notifications
-
-# Set environment variables for the function
-supabase secrets set MONGODB_URI=your_mongodb_uri
-supabase secrets set SENDGRID_API_KEY=your_sendgrid_key
-```
-
-### Set Up Production CRON
-
-Use Vercel Cron, GitHub Actions, or external services to trigger the email notifications function every minute.
 
 ## 🧪 Testing
 
 ### Manual Testing
 
-1. Create a quiet block that starts in 11-12 minutes
-2. Wait for the CRON job to run
-3. Check your email for the notification
+1. **Create a quiet block** that starts in 10-15 minutes
+2. **Wait for the CRON job** to run (every minute)
+3. **Check your email** for the notification
 
 ### Development Testing
 
-Use tools like ngrok to expose your local development server and test webhooks.
+```bash
+# Run the development server
+npm run dev
+
+# Test API endpoints
+curl http://localhost:3000/api/health
+```
 
 ## 🔒 Security Features
 
-- Server-side authentication with Supabase
-- Input validation on all forms
-- API route protection with user authentication
-- SQL injection prevention with parameterized queries
-- XSS protection with proper data sanitization
+- ✅ **Server-side authentication** with Supabase
+- ✅ **Input validation** on all forms
+- ✅ **API route protection** with user authentication
+- ✅ **XSS protection** with proper data sanitization
+- ✅ **CSRF protection** with Next.js built-in security
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Authentication not working**
-   - Check Supabase URL and keys
-   - Verify site URL in Supabase settings
+**1. "Setup Required" screen appears**
+- Check that all environment variables are set correctly
+- Ensure Supabase URL starts with `https://`
 
-2. **Database connection fails**
-   - Verify MongoDB connection string
-   - Check network access in MongoDB Atlas
+**2. MongoDB connection fails**
+- Verify your connection string format
+- Check IP whitelist in MongoDB Atlas
+- Ensure database user has proper permissions
 
-3. **Emails not sending**
-   - Verify SendGrid API key
-   - Check email templates and from address
-   - Ensure CRON job is running
+**3. Email notifications not working**
+- Verify Resend API key is correct
+- Check Supabase Edge Function logs
+- Ensure CRON job is running
 
-4. **CRON job not triggering**
-   - Verify Edge Function is deployed
-   - Check CRON service configuration
-   - Monitor function logs in Supabase
+**4. Timezone issues**
+- The app now stores times as strings to avoid timezone conversion
+- Times display exactly as you enter them
+
+### Debug Mode
+
+Check the browser console and Vercel function logs for detailed error messages.
 
 ## 📝 License
 
@@ -317,18 +280,26 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📞 Support
 
-For support, please open an issue on GitHub or contact the development team.
+- **GitHub Issues:** [Create an issue](https://github.com/nikk2511/Quiet-Hours-Scheduler-Web-App/issues)
+- **Email:** Contact the development team
+
+## 🎉 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- Database powered by [MongoDB Atlas](https://www.mongodb.com/atlas)
+- Authentication by [Supabase](https://supabase.com/)
+- Email service by [Resend](https://resend.com/)
 
 ---
 
 **Happy studying!** 📚✨
-#   Q u i e t - H o u r s - S c h e d u l e r - W e b - A p p  
- U p d a t e d   M o n g o D B   c o n n e c t i o n   s e t t i n g s  
- 
+
+*Focus. Study. Achieve.*

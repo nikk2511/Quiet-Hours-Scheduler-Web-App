@@ -58,37 +58,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // BULLETPROOF FIX: Store times as strings to avoid timezone conversion
+    // INDIAN TIMEZONE FIX: Handle IST (UTC+5:30) properly
     const now = new Date()
     
-    // Convert datetime-local to readable time strings
-    const formatTimeString = (dateTimeStr: string) => {
-      // dateTimeStr is like "2024-01-16T14:40"
+    // Convert datetime-local to Indian time format
+    const formatIndianTime = (dateTimeStr: string) => {
+      // dateTimeStr is like "2024-01-16T14:40" (user's local time in India)
       const [date, time] = dateTimeStr.split('T')
       const [year, month, day] = date.split('-').map(Number)
       const [hour, minute] = time.split(':').map(Number)
       
-      // Create a date object for validation
-      const dateObj = new Date(year, month - 1, day, hour, minute)
+      // Format time in 12-hour format for display
+      const displayTime = `${hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour)}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`
       
-      // Return both the original string and formatted time
+      // Create date object in Indian timezone for validation
+      // India is UTC+5:30, so we need to adjust for this
+      const indianDate = new Date(year, month - 1, day, hour, minute)
+      
       return {
         original: dateTimeStr,
-        formatted: `${hour > 12 ? hour - 12 : hour}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`,
-        dateObj: dateObj
+        display: displayTime,
+        dateObj: indianDate
       }
     }
     
-    const startTime = formatTimeString(startDateTime)
-    const endTime = formatTimeString(endDateTime)
+    const startTime = formatIndianTime(startDateTime)
+    const endTime = formatIndianTime(endDateTime)
     const start = startTime.dateObj
     const end = endTime.dateObj
     
-    console.log('🕐 BULLETPROOF TIMEZONE FIX:')
-    console.log('User entered:', { startDateTime, endDateTime })
+    console.log('🇮🇳 INDIAN TIMEZONE FIX:')
+    console.log('User entered (IST):', { startDateTime, endDateTime })
     console.log('Will display as:', { 
-      start: startTime.formatted, 
-      end: endTime.formatted 
+      start: startTime.display, 
+      end: endTime.display 
     })
     
     // Add 30 seconds buffer to account for processing time
@@ -128,8 +131,8 @@ export async function POST(request: NextRequest) {
 
     const quietBlock: Omit<QuietBlock, '_id'> = {
       userId: user.id,
-      startDateTime: startTime.formatted, // Store as formatted string
-      endDateTime: endTime.formatted,     // Store as formatted string
+      startDateTime: startTime.display, // Store as Indian time string
+      endDateTime: endTime.display,     // Store as Indian time string
       description: description.trim(),
       notificationSent: false,
       createdAt: new Date(),
@@ -172,34 +175,35 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // BULLETPROOF FIX: Store times as strings to avoid timezone conversion
+    // INDIAN TIMEZONE FIX: Handle IST (UTC+5:30) properly for updates
     const now = new Date()
     
-    // Convert datetime-local to readable time strings (same as CREATE)
-    const formatTimeString = (dateTimeStr: string) => {
+    // Convert datetime-local to Indian time format (same as CREATE)
+    const formatIndianTime = (dateTimeStr: string) => {
       const [date, time] = dateTimeStr.split('T')
       const [year, month, day] = date.split('-').map(Number)
       const [hour, minute] = time.split(':').map(Number)
       
-      const dateObj = new Date(year, month - 1, day, hour, minute)
+      const displayTime = `${hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour)}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`
+      const indianDate = new Date(year, month - 1, day, hour, minute)
       
       return {
         original: dateTimeStr,
-        formatted: `${hour > 12 ? hour - 12 : hour}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`,
-        dateObj: dateObj
+        display: displayTime,
+        dateObj: indianDate
       }
     }
     
-    const startTime = formatTimeString(startDateTime)
-    const endTime = formatTimeString(endDateTime)
+    const startTime = formatIndianTime(startDateTime)
+    const endTime = formatIndianTime(endDateTime)
     const start = startTime.dateObj
     const end = endTime.dateObj
     
-    console.log('🕐 BULLETPROOF UPDATE FIX:')
-    console.log('User entered:', { startDateTime, endDateTime })
+    console.log('🇮🇳 INDIAN UPDATE FIX:')
+    console.log('User entered (IST):', { startDateTime, endDateTime })
     console.log('Will display as:', { 
-      start: startTime.formatted, 
-      end: endTime.formatted 
+      start: startTime.display, 
+      end: endTime.display 
     })
     
     // Add 30 seconds buffer to account for processing time
@@ -257,8 +261,8 @@ export async function PUT(request: NextRequest) {
       { _id: new ObjectId(_id), userId: user.id },
       {
         $set: {
-          startDateTime: startTime.formatted, // Store as formatted string
-          endDateTime: endTime.formatted,     // Store as formatted string
+          startDateTime: startTime.display, // Store as Indian time string
+          endDateTime: endTime.display,     // Store as Indian time string
           description: description.trim(),
           updatedAt: new Date()
         }

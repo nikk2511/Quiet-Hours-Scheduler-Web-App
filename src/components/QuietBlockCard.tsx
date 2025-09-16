@@ -9,7 +9,7 @@ interface QuietBlockCardProps {
 }
 
 export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps) {
-  // BULLETPROOF FIX: Display stored time strings directly, no conversion
+  // INDIAN TIMEZONE FIX: Display times exactly as stored (Indian time)
   const startTime = typeof block.startDateTime === 'string' 
     ? block.startDateTime 
     : format(new Date(block.startDateTime), 'h:mm a')
@@ -29,7 +29,7 @@ export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps)
   const isActive = startDate <= now && endDate > now
   const isPast = endDate <= now
   
-  console.log('🕐 BULLETPROOF DISPLAY:', {
+  console.log('🇮🇳 INDIAN TIMEZONE DISPLAY:', {
     stored: block.startDateTime,
     display: startTime,
     type: typeof block.startDateTime
@@ -56,7 +56,7 @@ export function QuietBlockCard({ block, onEdit, onDelete }: QuietBlockCardProps)
           
           <div className="mb-2">
             <p className="text-sm text-gray-600">
-              {startTime} - {endTime}
+              {startTime} - {endTime} <span className="text-xs text-gray-500">(IST)</span>
             </p>
             <p className="text-sm font-medium text-gray-900 mt-1">
               {block.description}
